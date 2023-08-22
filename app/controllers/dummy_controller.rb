@@ -15,7 +15,6 @@ class DummyController < ApplicationController
 
   def show
     @message = 'Hello, RuboCop!'
-    str = "asdsadasd asdasd"
-    render json: { message: @message }
+    #render json: { message: @message }
   end
 end
