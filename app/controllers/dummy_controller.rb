@@ -14,7 +14,10 @@ class DummyController < ApplicationController
   end
 
   def show
-    @message = 'Hello, RuboCop!'
+    @message = "Hello, RuboCop!"
+    for i in 0..5
+           puts "Value of local variable is #{i}"
+    end
     render json: { message: @message }
   end
 end
