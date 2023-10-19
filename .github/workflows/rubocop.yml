@@ -1,7 +1,10 @@
-name: RuboCop Check
+name: RuboCop
 
 on:
   pull_request:
+    branches:
+      - main
+  push:
     branches:
       - main
 
@@ -10,44 +13,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/checkout@v3
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: actions/setup-ruby@v2
         with:
           ruby-version: 3.1.2
 
-      - name: Install dependencies
+      - name: Install RuboCop
         run: |
-          gem install bundler
-          bundle install --jobs 4 --retry 3
+          gem install rubocop
 
-      - name: Get changed Ruby files
+      - name: Get changed files
         id: changed-files
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const listChangedFiles = async () => {
-              const response = await github.repos.compareCommits({
-                base: context.payload.pull_request.base.sha,
-                head: context.payload.pull_request.head.sha,
-              });
-              const files = response.data.files
-                .filter(file => file.filename.endsWith('.rb'))
-                .map(file => file.filename);
-              return files;
-            };
-            return await listChangedFiles();
-          result-encoding: 'string'
-
-      - name: Run RuboCop on modified files
         run: |
-          modified_files="${{ steps.changed-files.outputs.result }}"
-          if [ -n "$modified_files" ]; then
-            bundle exec rubocop $modified_files
-          else
-            echo "No modified Ruby files found."
-          fi
+          git diff --name-only HEAD HEAD~1 > changed-files.txt
+
+      - name: Run RuboCop on changed files
+        run: |
+          bundle exec rubocop --only-files $(cat changed-files.txt)
+
+      - name: Fail if there are RuboCop violations
+        if: ${{ steps.rubocop.outputs.exit-code != 0 }}
+        run: exit 1
