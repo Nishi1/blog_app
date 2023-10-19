@@ -25,15 +25,13 @@ jobs:
           gem install bundler
           bundle install --jobs 4 --retry 3
 
-      - name: List modified Ruby files
-        id: files
-        run: |
-          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.rb$' > modified_files.txt
-          echo "::set-output name=modified_files::$(cat modified_files.txt)"
+      - name: Get changed Ruby files
+        id: changed-files
+        uses: actions/changed-files@v1
 
       - name: Run RuboCop on modified files
         run: |
-          modified_files=$(cat modified_files.txt)
+          modified_files="${{ steps.changed-files.outputs.files }}"
           if [ -n "$modified_files" ]; then
             bundle exec rubocop $modified_files
           else
