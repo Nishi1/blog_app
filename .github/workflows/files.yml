@@ -37,10 +37,12 @@ jobs:
 
       - name: Run RuboCop on changed files
         run: |
-          for file in $CHANGED_FILES; do
-            echo "Running RuboCop for $file"
-            bundle exec rubocop "$file"
-          done
+          if [[ -n "$CHANGED_FILES" ]]; then
+            echo "Running RuboCop for changed Ruby files..."
+            bundle exec rubocop $CHANGED_FILES
+          else
+            echo "No Ruby files were changed in this pull request."
+          fi
 
       - name: Check RuboCop offenses
         run: |
@@ -53,6 +55,4 @@ jobs:
             else
               echo "No RuboCop offenses found in the changed files."
             fi
-          else
-            echo "No Ruby files were changed in this pull request."
           fi
