@@ -28,7 +28,7 @@ jobs:
       - name: List modified Ruby files
         id: modified-files
         run: |
-          modified_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.rb$')
+          modified_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '\.rb$')
           echo "::set-output name=modified_files::$modified_files"
 
       - name: Run RuboCop on modified files
