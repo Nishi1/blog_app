@@ -40,10 +40,12 @@ jobs:
 
       - name: Check RuboCop offenses
         run: |
+          # Run RuboCop on the changed Ruby files
           OUTPUT=$(bundle exec rubocop $CHANGED_FILES)
-          if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
+          
+          if [ $? -eq 0 ]; then
+            echo "No RuboCop offenses found."
+          else
             echo "RuboCop offenses found. Please fix them before merging."
             exit 1
-          else
-            echo "No RuboCop offenses found."
           fi
