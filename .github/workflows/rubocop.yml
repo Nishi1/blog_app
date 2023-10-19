@@ -1,10 +1,7 @@
-name: RuboCop
+name: RuboCop Check
 
 on:
   pull_request:
-    branches:
-      - main
-  push:
     branches:
       - main
 
@@ -13,26 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout PR branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Ruby
-        uses: actions/setup-ruby@v2
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.1.2
 
-      - name: Install RuboCop
+      - name: Install dependencies
         run: |
-          gem install rubocop
+          gem install bundler
+          bundle install --jobs 4 --retry 3
 
-      - name: Get changed files
-        id: changed-files
+      - name: List modified Ruby files
+        id: modified-files
         run: |
-          git diff --name-only HEAD HEAD~1 > changed-files.txt
+          modified_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.rb$')
+          echo "::set-output name=modified_files::$modified_files"
 
-      - name: Run RuboCop on changed files
+      - name: Run RuboCop on modified files
         run: |
-          bundle exec rubocop --only-files $(cat changed-files.txt)
-
-      - name: Fail if there are RuboCop violations
-        if: ${{ steps.rubocop.outputs.exit-code != 0 }}
-        run: exit 1
+          modified_files="${{ steps.modified-files.outputs.modified_files }}"
+          if [ -n "$modified_files" ]; then
+            bundle exec rubocop $modified_files
+          else
+            echo "No modified Ruby files found."
+          fi
