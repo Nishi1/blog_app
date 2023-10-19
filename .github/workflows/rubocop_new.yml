@@ -18,6 +18,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          ref: ${{ github.sha }}
+          repository: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 16
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
