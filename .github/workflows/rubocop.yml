@@ -28,15 +28,21 @@ jobs:
           gem install bundler
           bundle install --jobs 4 --retry 3
 
-      - name: List modified files
+      - name: List modified Ruby files
         id: files
-        run: echo "::set-output name=modified_files::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})"
+        run: echo "::set-output name=modified_files::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.rb$')"
 
-      - name: Run RuboCop
+      - name: Run RuboCop on modified files
         run: |
           modified_files=$(echo ${{ steps.files.outputs.modified_files }})
           if [ -n "$modified_files" ]; then
-            bundle exec rubocop $modified_files
+            OUTPUT=$(bundle exec rubocop --format simple $modified_files)
+            if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
+              echo "RuboCop offenses found in modified files. Please fix them before merging."
+              exit 1
+            else
+              echo "No RuboCop offenses found in modified files."
+            fi
           else
-            echo "No RuboCop offenses found in modified files."
+            echo "No modified Ruby files found."
           fi
