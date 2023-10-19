@@ -16,6 +16,11 @@ jobs:
         with:
           node-version: 16
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1.2
+
       - name: Check out code
         uses: actions/checkout@v2
 
@@ -26,7 +31,12 @@ jobs:
           AUTH_HEADER="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
           
           CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename')
-          echo "Changed files in the pull request: $CHANGED_FILES" 
+          echo "Changed files in the pull request: $CHANGED_FILES"
+
+      - name: Install Bundler and RuboCop
+        run: |
+          gem install bundler
+          bundle install
 
       - name: Run RuboCop for changed files
         run: |
@@ -34,7 +44,7 @@ jobs:
             if [[ $file == *".rb" ]]; then
               # Check if the file is a Ruby file
               echo "Running RuboCop for $file"
-              rubocop "$file"
+              bundle exec rubocop "$file"
             else
               echo "$file is not a Ruby file, skipping RuboCop"
             fi
