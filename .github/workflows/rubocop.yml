@@ -1,21 +1,61 @@
-name: Get Changed Files
+name: RuboCop Check
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
 
 jobs:
-  get-changed-files:
+  rubocop:
     runs-on: ubuntu-latest
 
+    env:
+      CHANGED_FILES: ''
+
     steps:
-    - name: Check Out Code
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Get Changed Files
-      id: changed_files
-      run: echo "::set-output name=files::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})"
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1.2
 
-    - name: Display Changed Files
-      run: echo "Changed files: ${{ steps.changed_files.outputs.files }}"
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
+          AUTH_HEADER="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
+          
+          export CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename' | grep '\.rb$')
+          echo "Changed Ruby files in the pull request: $CHANGED_FILES"
+
+      - name: Run RuboCop on changed files
+        run: |
+          if [[ -n "$CHANGED_FILES" ]]; then
+            echo "Running RuboCop for changed Ruby files..."
+            bundle exec rubocop $CHANGED_FILES
+          else
+            echo "No Ruby files were changed in this pull request."
+          fi
+
+      - name: Check RuboCop offenses
+        run: |
+          if [[ -n "$CHANGED_FILES" ]]; then
+            echo "Checking RuboCop offenses for changed files..."
+            OUTPUT=$(bundle exec rubocop $CHANGED_FILES --format simple)
+            if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
+              echo "RuboCop offenses found in the changed files. Please fix them before merging."
+              exit 1
+            else
+              echo "No RuboCop offenses found in the changed files."
+            fi
+          fi
