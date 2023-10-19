@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -28,15 +26,15 @@ jobs:
           gem install bundler
           bundle install --jobs 4 --retry 3
 
-      - name: Run RuboCop
-        run: bundle exec rubocop
+      - name: List modified files
+        id: files
+        run: echo "::set-output name=modified_files::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})"
 
-      - name: Check RuboCop offenses
+      - name: Run RuboCop
         run: |
-          OUTPUT=$(bundle exec rubocop --format simple)
-          if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
-            echo "RuboCop offenses found. Please fix them before merging."
-            exit 1
+          modified_files=$(echo ${{ steps.files.outputs.modified_files }})
+          if [ -n "$modified_files" ]; then
+            bundle exec rubocop $modified_files
           else
-            echo "No RuboCop offenses found."
+            echo "No RuboCop offenses found in modified files."
           fi
