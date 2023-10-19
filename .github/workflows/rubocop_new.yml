@@ -11,8 +11,6 @@ on:
 jobs:
   rubocop:
     runs-on: ubuntu-latest
-    
-    fail-fast: true
 
     env:
       CHANGED_FILES: ''
