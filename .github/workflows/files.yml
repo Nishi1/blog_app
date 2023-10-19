@@ -28,8 +28,14 @@ jobs:
           CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename')
           echo "Changed files in the pull request: $CHANGED_FILES" 
 
-      - name: List all changed files
+      - name: Run RuboCop for changed files
         run: |
           for file in $CHANGED_FILES; do
-            echo "$file was changed"
+            if [[ $file == *".rb" ]]; then
+              # Check if the file is a Ruby file
+              echo "Running RuboCop for $file"
+              rubocop "$file"
+            else
+              echo "$file is not a Ruby file, skipping RuboCop"
+            fi
           done
