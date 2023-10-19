@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
 
 jobs:
   rubocop:
@@ -30,19 +27,15 @@ jobs:
 
       - name: List modified Ruby files
         id: files
-        run: echo "::set-output name=modified_files::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.rb$')"
+        run: |
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.rb$' > modified_files.txt
+          echo "::set-output name=modified_files::$(cat modified_files.txt)"
 
       - name: Run RuboCop on modified files
         run: |
-          modified_files=$(echo ${{ steps.files.outputs.modified_files }})
+          modified_files=$(cat modified_files.txt)
           if [ -n "$modified_files" ]; then
-            OUTPUT=$(bundle exec rubocop --format simple $modified_files)
-            if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
-              echo "RuboCop offenses found in modified files. Please fix them before merging."
-              exit 1
-            else
-              echo "No RuboCop offenses found in modified files."
-            fi
+            bundle exec rubocop $modified_files
           else
             echo "No modified Ruby files found."
           fi
