@@ -1,28 +1,30 @@
-name: CI
+name: RuboCop Check
 
 on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 jobs:
-  changed_files:
+  rubocop:
     runs-on: ubuntu-latest
-    name: Test changed-files
 
     steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.1.2
 
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
 
       - name: Get changed files
         id: changed-files
@@ -30,22 +32,27 @@ jobs:
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
           AUTH_HEADER="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
           
-          CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename')
-          echo "Changed files in the pull request: $CHANGED_FILES"
+          CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename' | grep '\.rb$')
+          echo "Changed Ruby files in the pull request: $CHANGED_FILES"
 
-      - name: Install Bundler and RuboCop
-        run: |
-          gem install bundler
-          bundle install
-
-      - name: Run RuboCop for changed files
+      - name: Run RuboCop on changed files
         run: |
           for file in $CHANGED_FILES; do
-            if [[ $file == *".rb" ]]; then
-              # Check if the file is a Ruby file
-              echo "Running RuboCop for $file"
-              bundle exec rubocop "$file"
-            else
-              echo "$file is not a Ruby file, skipping RuboCop"
-            fi
+            echo "Running RuboCop for $file"
+            bundle exec rubocop "$file"
           done
+
+      - name: Check RuboCop offenses
+        run: |
+          if [[ -n "$CHANGED_FILES" ]]; then
+            echo "Checking RuboCop offenses for changed files..."
+            OUTPUT=$(bundle exec rubocop $CHANGED_FILES --format simple)
+            if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
+              echo "RuboCop offenses found in the changed files. Please fix them before merging."
+              exit 1
+            else
+              echo "No RuboCop offenses found in the changed files."
+            fi
+          else
+            echo "No Ruby files were changed in this pull request."
+          fi
