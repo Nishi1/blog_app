@@ -45,7 +45,7 @@ jobs:
           echo "Changed Ruby files in the pull request: $CHANGED_FILES"
 
       - name: Check RuboCop offenses
-        if: ${{ steps.changed-files.outputs.CHANGED_FILES }}
+        if: ${{ steps.changed-files.outputs.CHANGED_FILES != '' }}
         run: |
           OUTPUT=$(bundle exec rubocop $CHANGED_FILES)
           if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
