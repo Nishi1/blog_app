@@ -42,12 +42,14 @@ jobs:
           echo "Changed Ruby files in the pull request: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
 
+      - name: Run RuboCop
+        run: bundle exec rubocop $CHANGED_FILES
+
       - name: Check RuboCop offenses
         run: |
           CHANGED_FILES=$CHANGED_FILES
           echo "Running RuboCop on the following files: $CHANGED_FILES"
           if [ -n "$CHANGED_FILES" ]; then
-            echo "i am in if condition"
             OUTPUT=$(bundle exec rubocop $CHANGED_FILES 2>&1)
             echo "RuboCop Output:"
             echo "$OUTPUT"
