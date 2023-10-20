@@ -47,6 +47,7 @@ jobs:
           CHANGED_FILES=$CHANGED_FILES
           echo "Running RuboCop on the following files: $CHANGED_FILES"
           if [ -n "$CHANGED_FILES" ]; then
+            echo "i am in if condition"
             OUTPUT=$(bundle exec rubocop $CHANGED_FILES)
             echo "RuboCop Output:"
             echo "$OUTPUT"
