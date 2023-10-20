@@ -38,7 +38,7 @@ jobs:
           API_RESPONSE=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL")
           echo "GitHub API Response: $API_RESPONSE"
           
-          CHANGED_FILES=$(echo "$API_RESPONSE" | jq -r '.[].filename' | grep '\.rb$' | paste -sd " " -)
+          CHANGED_FILES=$(echo "$API_RESPONSE" | jq -r 'select(. | type == "array") | map(select(.filename | endswith(".rb"))) | .[].filename' | paste -sd " " -)
           echo "Changed Ruby files in the pull request: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
 
