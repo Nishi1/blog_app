@@ -1,6 +1,6 @@
-class DummyController < ApplicationController
+class MessageController < ApplicationController
   def index
-    @message = 'Hello, RuboCop!'
+    @message = 'Hello, Message RuboCop!'
     render json: { message: @message }
   end
 
