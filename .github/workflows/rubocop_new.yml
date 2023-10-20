@@ -44,13 +44,3 @@ jobs:
 
       - name: Run RuboCop
         run: bundle exec rubocop $CHANGED_FILES
-
-      - name: Check RuboCop offenses
-        run: |
-          OUTPUT=$(bundle exec rubocop $CHANGED_FILES --format simple)
-          if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
-            echo "RuboCop offenses found. Please fix them before merging."
-            exit 1
-          else
-            echo "No RuboCop offenses found."
-          fi
