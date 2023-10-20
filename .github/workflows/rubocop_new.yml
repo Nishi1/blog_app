@@ -37,11 +37,11 @@ jobs:
           
           CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename' | grep '\.rb$')
           echo "Changed Ruby files in the pull request: $CHANGED_FILES"
-          echo "##[set-env name=CHANGED_FILES]$CHANGED_FILES"
+          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
 
       - name: Check RuboCop offenses
         run: |
-          CHANGED_FILES=$GITHUB_ENV.CHANGED_FILES
+          CHANGED_FILES=$CHANGED_FILES
           echo "Running RuboCop on the following files: $CHANGED_FILES"
           OUTPUT=$(bundle exec rubocop $CHANGED_FILES)
           echo "RuboCop Output:"
