@@ -35,13 +35,13 @@ jobs:
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
           AUTH_HEADER="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
           
-          CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename' | grep '\.rb$')
+          export CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename' | grep '\.rb$')
           echo "Changed Ruby files in the pull request: $CHANGED_FILES"
 
       - name: Check RuboCop offenses
         run: |
-          echo "Running RuboCop on the following files: ${{ steps.changed-files.outputs.CHANGED_FILES }}"
-          OUTPUT=$(bundle exec rubocop ${{ steps.changed-files.outputs.CHANGED_FILES }})
+          echo "Running RuboCop on the following files: $CHANGED_FILES"
+          OUTPUT=$(bundle exec rubocop $CHANGED_FILES)
           echo "RuboCop Output:"
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
