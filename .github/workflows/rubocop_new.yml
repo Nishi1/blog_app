@@ -12,9 +12,6 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
 
-    env:
-      CHANGED_FILES: ''
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -23,7 +20,6 @@ jobs:
           ref: ${{ github.sha }}
           repository: ${{ github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          node-version: 16
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -41,7 +37,11 @@ jobs:
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
           AUTH_HEADER="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
           
-          export CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename' | grep '\.rb$')
+          RESPONSE=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL")
+          echo "GitHub API response:"
+          echo "$RESPONSE"
+          
+          CHANGED_FILES=$(echo "$RESPONSE" | jq -r '.[] | select(.filename | endswith(".rb")) | .filename')
           echo "Changed Ruby files in the pull request: $CHANGED_FILES"
 
       - name: Check RuboCop offenses
