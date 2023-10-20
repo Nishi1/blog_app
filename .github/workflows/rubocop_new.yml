@@ -48,7 +48,7 @@ jobs:
           echo "Running RuboCop on the following files: $CHANGED_FILES"
           if [ -n "$CHANGED_FILES" ]; then
             echo "i am in if condition"
-            OUTPUT=$(bundle exec rubocop $CHANGED_FILES)
+            OUTPUT=$(bundle exec rubocop $CHANGED_FILES 2>&1)
             echo "RuboCop Output:"
             echo "$OUTPUT"
             if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
