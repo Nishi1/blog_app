@@ -47,18 +47,10 @@ jobs:
 
       - name: Check RuboCop offenses
         run: |
-          CHANGED_FILES=$CHANGED_FILES
-          echo "Running RuboCop on the following files: $CHANGED_FILES"
-          if [ -n "$CHANGED_FILES" ]; then
-            OUTPUT=$(bundle exec rubocop $CHANGED_FILES 2>&1)
-            echo "RuboCop Output:"
-            echo "$OUTPUT"
-            if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
-              echo "RuboCop offenses found. Please fix them before merging."
-              exit 1
-            else
-              echo "No RuboCop offenses found."
-            fi
+          OUTPUT=$(bundle exec rubocop $CHANGED_FILES --format simple)
+          if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
+            echo "RuboCop offenses found. Please fix them before merging."
+            exit 1
           else
-            echo "No Ruby files found in the pull request."
+            echo "No RuboCop offenses found."
           fi
