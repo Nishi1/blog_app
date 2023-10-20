@@ -1,26 +1,30 @@
-AllCops:
-  NewCops: enable
-  DisplayStyleGuide: true
-  DisplayCopNames: true
-  SuggestExtensions: false
-  Include:
-    - 'app/controllers/**/*.rb'
-    - 'app/models/**/*.rb'
+Documentation:
+  Enabled: false
+Lint/MissingSuper:
   Exclude:
-    - '**/bin/spring'
-    - '**/bin/setup'
-    - '**/bin/rake'
-    - '**/bin/rails'
-    - '**/db/schema.rb'
-    - 'client/**/**'
-    - 'config/**/**'
-    - 'db/**/**'
-    - 'bin/**'
-    - 'app/models/role.rb'
-    - 'vendor/*'
-    - '**/Gemfile'
-    - '**/Rakefile'
-Style/FrozenStringLiteralComment:
+    - 'services/**/*'
+    - 'core/**/*'
+Metrics/ClassLength:
   Enabled: false
-Style/Documentation:
+  CountComments: false
+  Max: 1000
+Metrics/MethodLength:
+  Max: 100
+Metrics/AbcSize:
+  Max: 500
+Style/ClassAndModuleChildren:
   Enabled: false
+Metrics/CyclomaticComplexity:
+  Max: 20
+Metrics/PerceivedComplexity:
+  Max: 30
+Metrics/ModuleLength:
+  Max: 300
+Metrics/BlockLength:
+  Max: 100
+Naming/VariableNumber:
+  Enabled: false
+Style/NumericLiterals:
+  Enabled: false
+Style/RescueStandardError:
+  EnforcedStyle: implicit
