@@ -18,8 +18,6 @@ jobs:
         with:
           submodules: recursive
           ref: ${{ github.sha }}
-          repository: ${{ github.repository }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -37,17 +35,16 @@ jobs:
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
           AUTH_HEADER="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
           
-          RESPONSE=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL")
-          echo "GitHub API response:"
-          echo "$RESPONSE"
-          
-          CHANGED_FILES=$(echo "$RESPONSE" | jq -r '.[] | select(.filename | endswith(".rb")) | .filename')
+          CHANGED_FILES=$(curl -sSL -H "$AUTH_HEADER" "$PR_URL" | jq -r '.[].filename' | grep '\.rb$')
           echo "Changed Ruby files in the pull request: $CHANGED_FILES"
 
       - name: Check RuboCop offenses
         if: ${{ steps.changed-files.outputs.CHANGED_FILES != '' }}
         run: |
-          OUTPUT=$(bundle exec rubocop $CHANGED_FILES)
+          echo "Running RuboCop on the following files: ${{ steps.changed-files.outputs.CHANGED_FILES }}"
+          OUTPUT=$(bundle exec rubocop ${{ steps.changed-files.outputs.CHANGED_FILES }})
+          echo "RuboCop Output:"
+          echo "$OUTPUT"
           if echo "$OUTPUT" | grep -E '^(?:Offenses|==).*[1-9][0-9]* .*file' ; then
             echo "RuboCop offenses found. Please fix them before merging."
             exit 1
